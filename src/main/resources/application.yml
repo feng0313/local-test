@@ -1,0 +1,26 @@
+server:
+  port: 48001
+  servlet:
+    context-path: /
+
+spring:
+  profiles:
+    active: '@package.environment@'
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
+logging:
+  file:
+    name: ./logs/local-test.log
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml # 如果有XML文件的话
+  type-aliases-package: com.chunfeng.local.demos.model # 实体类所在包
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true # 下划线转驼峰等其他配置

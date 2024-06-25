@@ -13,7 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.util.ObjectUtils;
@@ -37,8 +39,8 @@ public class WebSocketController {
     @Autowired
     private MyWebSocketClient myWebSocketClient;
 
-//    @MessageMapping("/queryAllData")
-//    @SendTo("/topic/data")
+    @MessageMapping("/queryAllData")
+    @SendTo("/topic/data")
     public void queryAllDataFromWebSocket(@Payload String jsonPayload) {
         ObjectMapper objectMapper = new ObjectMapper();
         QueryDataRequest request = null;
@@ -50,14 +52,15 @@ public class WebSocketController {
         log.info("===>开始查询数据");
         Map<String, List<DynamicDataRow>> allData =
                 jdbcDatabaseAccess.getAllFilteredTablesData(request.getStartTime(), request.getTableList());
-        log.info("===>数据查询完毕\n===>开始传输数据");
+        log.info("===>数据查询完毕---开始传输数据");
         Map<String, Integer> tableDataCounts = new HashMap<>();
         for (Map.Entry<String, List<DynamicDataRow>> entry : allData.entrySet()) {
             tableDataCounts.put(entry.getKey(), entry.getValue().size());
         }
         template.convertAndSend("/topic/data_summary", tableDataCounts);
         log.info("===>已发送数据条数汇总");
-        int batchSize = 15; // 设置每批次的数据条数
+        // 设置每批次的数据条数
+        int batchSize = 15;
         allData.forEach((tableName, tableData) -> {
             log.info("{}表的条数：{}", tableName, tableData.size());
             int dataSize = tableData.size();

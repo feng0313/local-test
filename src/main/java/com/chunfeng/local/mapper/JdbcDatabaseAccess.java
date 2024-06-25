@@ -21,24 +21,17 @@ public class JdbcDatabaseAccess {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Map<String, List<DynamicDataRow>> getAllFilteredTablesData(String sinceTime, List<String> excludeTableNames) {
+    public Map<String, List<DynamicDataRow>> getAllFilteredTablesData(String sinceTime, List<String> tableNames) {
         log.info("===>开始汇总数据");
         String timeColumn = "create_time";
-        // 查询所有表名
-        String tableNamesSql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'huayi-iot-cloud'";
-        List<String> allTableNames = jdbcTemplate.queryForList(tableNamesSql, String.class);
-        // 排除指定的表
-        List<String> filteredTableNames = allTableNames.stream()
-                .filter(tableName -> !excludeTableNames.contains(tableName))
-                .collect(Collectors.toList());
         // 缓存所有表的列信息
         Map<String, List<String>> tableColumnsCache = new HashMap<>();
-        for (String tableName : filteredTableNames) {
+        for (String tableName : tableNames) {
             tableColumnsCache.put(tableName, getTableColumns(tableName));
         }
         Map<String, List<DynamicDataRow>> allTablesData = new HashMap<>();
         int totalProcessedRecords = 0;
-        for (String tableName : filteredTableNames) {
+        for (String tableName : tableNames) {
             log.info("开始处理表: {}", tableName);
             List<DynamicDataRow> tableData = fetchTableDataSinceTime(tableName, timeColumn, sinceTime, tableColumnsCache.get(tableName));
             if (tableData != null && !tableData.isEmpty()) {
@@ -48,13 +41,7 @@ public class JdbcDatabaseAccess {
                 log.info("表 {} 没有符合条件的数据", tableName);
             }
         }
-        // 计算并记录被排除的表数量
-        int excludedCount = excludeTableNames.size();
-        log.info("总计处理 {} 张表，其中 {} 张表被排除，操作了 {} 条数据",
-                filteredTableNames.size(), excludedCount, totalProcessedRecords);
-        if (!excludeTableNames.isEmpty()) {
-            log.info("被排除的表有: {}", excludeTableNames);
-        }
+        log.info("总计处理 {} 张表，操作了 {} 条数据", tableNames.size(), totalProcessedRecords);
         return allTablesData;
     }
 

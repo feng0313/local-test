@@ -35,7 +35,6 @@ public class DynamicDataWriter {
      */
     public static void writeDataToDatabase(@NotNull Map<String, List<DynamicDataRow>> allDataMap) {
         log.info("===>开始写入数据，请耐心等待");
-        log.info("传入数据：{}",allDataMap);
         if (!ObjectUtils.isEmpty(allDataMap)) {
             int totalInsertedRows = 0;
             int totalTablesProcessed = 0;
@@ -72,13 +71,14 @@ public class DynamicDataWriter {
                 // 所有数据处理完成后，提交事务
                 conn.commit();
             } catch (SQLException e) {
-                log.error("数据库访问异常,已自动回滚：{}", e.getMessage());
+                log.error("数据库访问异常,已自动回滚本此写入：{}", e.getMessage());
             } finally {
                 // 输出统计信息
                 log.info("写入完成。共插入 {} 条记录，操作 {} 个表。", totalInsertedRows, totalTablesProcessed);
             }
+        } else {
+            log.info("===>传入数据为空，无任何操作。");
         }
-        log.info("===>传入数据为空，无任何操作。");
     }
 
     private static String buildInsertSql(String tableName, Set<String> columnNames) {

@@ -77,7 +77,6 @@ public class MyStompSessionHandler extends StompSessionHandlerAdapter {
                 processAllData(tableName);
             }
         });
-        session.send("/app/queryAllData", dataRequest);
         log.info("已发送查询所有数据的请求，时间戳：{}", dataRequest.getStartTime());
     }
 

@@ -4,7 +4,7 @@ spring:
     druid:
       # 数据库连接的基本配置
       driver-class-name: com.mysql.cj.jdbc.Driver # 根据实际数据库类型修改驱动类名
-      url: jdbc:mysql://127.0.0.1:3306/huayi-iot-cloud?useUnicode=true&characterEncoding=utf-8
+      url: jdbc:mysql://10.210.254.39:3306/huayi-iot-cloud?useUnicode=true&characterEncoding=utf-8
       username: root
       password: Huayi2021
 

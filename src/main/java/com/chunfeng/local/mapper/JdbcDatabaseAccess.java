@@ -21,7 +21,8 @@ public class JdbcDatabaseAccess {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Map<String, List<DynamicDataRow>> getAllFilteredTablesData(String sinceTime, List<String> tableNames) {
+    public Map<String, List<DynamicDataRow>> getAllFilteredTablesData(String sinceTime, String endTime,
+                                                                      List<String> tableNames) {
         log.info("===>开始汇总数据");
         String timeColumn = "create_time";
         // 缓存所有表的列信息
@@ -33,7 +34,8 @@ public class JdbcDatabaseAccess {
         int totalProcessedRecords = 0;
         for (String tableName : tableNames) {
             log.info("开始处理表: {}", tableName);
-            List<DynamicDataRow> tableData = fetchTableDataSinceTime(tableName, timeColumn, sinceTime, tableColumnsCache.get(tableName));
+            List<DynamicDataRow> tableData = fetchTableDataSinceTime(tableName, timeColumn, sinceTime, endTime,
+                    tableColumnsCache.get(tableName));
             if (tableData != null && !tableData.isEmpty()) {
                 allTablesData.put(tableName, tableData);
                 totalProcessedRecords += tableData.size();
@@ -46,14 +48,18 @@ public class JdbcDatabaseAccess {
     }
 
     private List<DynamicDataRow> fetchTableDataSinceTime(String tableName, String timeColumn, String sinceTime,
+                                                         String endTime,
                                                          List<String> columns) {
         // 添加反引号以确保兼容表名和列名中的特殊字符
         String selectColumns = columns.stream().map(column -> "`" + column + "`").collect(Collectors.joining(","));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime time = LocalDateTime.parse(sinceTime, formatter);
+        LocalDateTime time1 = LocalDateTime.parse(sinceTime, formatter);
+        LocalDateTime time2 = LocalDateTime.parse(endTime, formatter);
         // 直接在fetchTableDataSinceTime方法内部构建完整的SQL查询字符串，包含sinceTime
-        String sql = String.format("SELECT %s, `%s` AS `_time_` FROM `%s` WHERE `%s` >= '%s'", selectColumns,
-                timeColumn, tableName, timeColumn, time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        String sql = String.format("SELECT %s, `%s` AS `_time_` FROM `%s` WHERE `%s` between '%s' and '%s'",
+                selectColumns, timeColumn, tableName, timeColumn,
+                time1.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                time2.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         try {
             return jdbcTemplate.query(sql, (rs, rowNum) -> {
                 DynamicDataRow row = new DynamicDataRow(tableName);

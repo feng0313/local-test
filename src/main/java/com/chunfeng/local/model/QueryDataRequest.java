@@ -9,4 +9,5 @@ public class QueryDataRequest {
     private String startTime;
     private List<String> tableList;
     private String url;
+    private String endTime;
 }

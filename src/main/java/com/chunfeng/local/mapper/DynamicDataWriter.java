@@ -22,11 +22,11 @@ import java.util.Set;
 @Component
 public class DynamicDataWriter {
 
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/huayi-iot-cloud?useUnicode=true" +
+    private static final String DB_URL = "jdbc:mysql://10.210.254.39:3306/huayi-iot-cloud?useUnicode=true" +
             "&characterEncoding=utf-8&useSSL=false";
     private static final String USER = "root";
     private static final String PASS = "Turing12345!";
-    private static final int BATCH_SIZE = 200; // 批量处理的大小
+    private static final int BATCH_SIZE = 200;
 
     /**
      * 将数据写入数据库
@@ -55,13 +55,22 @@ public class DynamicDataWriter {
                             pstmt.addBatch();
                             counter++;
                             if (counter % BATCH_SIZE == 0 || dataRow.equals(dataRows.get(dataRows.size() - 1))) {
-                                pstmt.executeBatch();
-                                // 根据实际执行的批次大小累加
-                                totalInsertedRows += counter;
-                                // 重置计数器
+                                try {
+                                    pstmt.executeBatch();
+                                    totalInsertedRows += counter;
+                                } catch (SQLException e) {
+                                    if (e.getMessage().contains("Duplicate entry")) {
+                                        continue; // 忽略重复记录，继续下一批处理
+                                    } else {
+                                        log.error("执行批量插入时发生错误并已自动回滚：{}", e.getMessage());
+                                        conn.rollback();
+                                        throw e;
+                                    }
+                                }
                                 counter = 0;
                             }
                         }
+
                     } catch (SQLException e) {
                         log.error("执行批量插入时发生错误并已自动回滚：{}", e.getMessage());
                         conn.rollback();

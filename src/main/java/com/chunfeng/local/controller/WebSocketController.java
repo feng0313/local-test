@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -112,39 +112,38 @@ public class WebSocketController {
         }
     }
 
-    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "*/30 * * * * ?")
     public void mySheduledTask1() {
+        log.info("定时任务执行property同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("property_1234567890");
-        // 计算上一次执行结束到这次执行开始的周期时间，以确定查询的起始时间
-        long fourHoursInMillis = Duration.ofHours(1).toMillis();
-        ZonedDateTime zonedDateTime = ZonedDateTime.now();
-        long alignedStartInMillis = zonedDateTime.toInstant().toEpochMilli() - (zonedDateTime.toInstant().toEpochMilli() % fourHoursInMillis);
-        LocalDateTime startTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(alignedStartInMillis), ZoneId.systemDefault());
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime startTime = endTime.minusSeconds(35);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         queryDataRequest.setStartTime(startTime.format(formatter));
-        queryDataRequest.setEndTime(LocalDateTime.now().format(formatter));
+        queryDataRequest.setEndTime(endTime.format(formatter));
         qidong(queryDataRequest);
     }
 
 
-    @Scheduled(cron = "0 15 * * * ?")
-    public void mySheduledTask2() {
+    @Scheduled(cron = "*/30 * * * * ?")
+    public void myScheduledTask2() {
+        log.info("定时任务执行event同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("event_1234567890");
-        // 同样计算时间差，但针对1小时周期
-        long fourHoursInMillis = Duration.ofHours(1).toMillis();
-        ZonedDateTime zonedDateTime = ZonedDateTime.now();
-        long alignedStartInMillis = zonedDateTime.toInstant().toEpochMilli() - (zonedDateTime.toInstant().toEpochMilli() % fourHoursInMillis);
-        LocalDateTime startTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(alignedStartInMillis), ZoneId.systemDefault());
+        // 计算35秒前的时间
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime startTime = endTime.minusSeconds(35);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         queryDataRequest.setStartTime(startTime.format(formatter));
-        queryDataRequest.setEndTime(LocalDateTime.now().format(formatter));
+        queryDataRequest.setEndTime(endTime.format(formatter));
         qidong(queryDataRequest);
     }
 
-    @Scheduled(cron = "0 30 * * * ?")
+
+    @Scheduled(cron = "*/30 * * * * ?")
     public void myScheduledTask() {
+        log.info("定时任务执行huayi-iot-cloud同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         List<String> tableNames = Arrays.asList(
                 "ezviz_item_device_history",
@@ -170,14 +169,12 @@ public class WebSocketController {
                 "statistic_sleep_stage"
         );
         queryDataRequest.setTableList(tableNames);
-        LocalDate today = LocalDate.now();
-        LocalDateTime todayAt235959 = today.atTime(0, 0, 0);
-        LocalDateTime todayAt2359591 = today.atTime(23, 59, 59);
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime startTime = endTime.minusSeconds(35);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDate = todayAt235959.format(formatter);
-        queryDataRequest.setStartTime(formattedDate);
+        queryDataRequest.setStartTime(startTime.format(formatter));
+        queryDataRequest.setEndTime(endTime.format(formatter));
         queryDataRequest.setUrl("huayi-iot-cloud");
-        queryDataRequest.setEndTime(todayAt2359591.format(formatter));
         qidong(queryDataRequest);
     }
 

@@ -64,7 +64,18 @@ public class TdengineWritter {
                 sqlBuilder.append("`").append(columnName).append("`");
                 isFirstColumn = false;
             }
-            sqlBuilder.append(") VALUES ");
+            if (dbName.contains("event") && tableName.contains("_")) {
+                String[] parts = tableName.split("_");
+                sqlBuilder.append(") USING `event_1234567890_")
+                        .append(parts[1]).append("` TAGS (")
+                        .append(parts[0]).append(") VALUES ");
+            } else if (dbName.contains("property") && !tableName.contains("_")) {
+                sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
+                        .append(tableName)
+                        .append(") VALUES ");
+            } else {
+                sqlBuilder.append(") VALUES ");
+            }
         }
         int byteSizeEstimate = 0;
         for (DynamicDataRow dataRow : dataRows) {
@@ -74,7 +85,6 @@ public class TdengineWritter {
                 executeSqlBatch(conn, sqlBuilder.toString());
                 sqlBuilder.setLength(0);
                 sqlBuilder.append("INSERT INTO ").append(dbName).append(".`").append(tableName).append("` (");
-
                 // 重新添加列名，因为sqlBuilder被清空了
                 DynamicDataRow sampleRow = dataRows.get(0);
                 Map<String, Object> sampleFields = sampleRow.getDataFields();
@@ -86,10 +96,20 @@ public class TdengineWritter {
                     sqlBuilder.append("`").append(columnName).append("`");
                     isFirstColumn = false;
                 }
-                sqlBuilder.append(") VALUES ");
+                if (dbName.contains("event") && tableName.contains("_")) {
+                    String[] parts = tableName.split("_");
+                    sqlBuilder.append(") USING `event_1234567890_")
+                            .append(parts[1]).append("` TAGS (")
+                            .append(parts[0]).append(") VALUES ");
+                } else if (dbName.contains("property") && !tableName.contains("_")) {
+                    sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
+                            .append(tableName)
+                            .append(") VALUES ");
+                } else {
+                    sqlBuilder.append(") VALUES ");
+                }
                 byteSizeEstimate = 0;
             }
-
             sqlBuilder.append("(");
             boolean isFirstValue = true;
             for (Map.Entry<String, Object> entry : dataFields.entrySet()) {
@@ -102,7 +122,6 @@ public class TdengineWritter {
             sqlBuilder.append("),");
             byteSizeEstimate += recordByteSize + AVG_RECORD_OVERHEAD;
         }
-
         // 执行剩余的SQL
         if (sqlBuilder.length() > 0) {
             sqlBuilder.setLength(sqlBuilder.length() - 1); // 移除最后一个逗号和逗号后的空格

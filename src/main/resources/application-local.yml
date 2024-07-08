@@ -52,4 +52,4 @@ server:
 #    password:
 #    database: 0
 #    timeout: 10000ms
-debug: true
+debug: false

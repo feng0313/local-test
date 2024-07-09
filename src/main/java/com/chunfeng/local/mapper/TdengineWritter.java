@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,8 @@ public class TdengineWritter {
     private static final int AVG_RECORD_OVERHEAD = 50; // 单条记录额外开销估计
 
     public void writeDataToDatabase(@NotNull Map<String, List<DynamicDataRow>> allDataMap, String dbName) {
-        log.info("===>开始写入TDengine数据，请耐心等待");
+        log.info("===>开始写入TDengine数据库{}，请耐心等待", dbName);
+        List<String> tableList = new ArrayList<>();
         if (!ObjectUtils.isEmpty(allDataMap)) {
             int totalInsertedRows = 0;
             int totalTablesProcessed = 0;
@@ -34,18 +36,20 @@ public class TdengineWritter {
                 for (Map.Entry<String, List<DynamicDataRow>> entry : allDataMap.entrySet()) {
                     totalTablesProcessed++;
                     String tableName = entry.getKey();
+                    tableList.add(tableName);
                     List<DynamicDataRow> dataRows = entry.getValue();
                     executeBatchWithSizeLimit(conn, dbName, tableName, dataRows, MAX_SQL_SIZE_BYTES);
                     totalInsertedRows += dataRows.size();
                 }
                 conn.commit();
             } catch (SQLException e) {
-                log.error("TDengine数据库访问异常,已自动回滚本次写入：{}", e.getMessage());
+                log.error("{}}数据库访问异常,已自动回滚本次写入：{}", dbName, e.getMessage());
             } finally {
-                log.info("写入TDengine完成。共插入 {} 条记录，操作 {} 个表。", totalInsertedRows, totalTablesProcessed);
+                log.info("{}库操作了以下表{}", dbName, tableList);
+                log.info("{}写入完成。共插入 {} 条记录，操作 {} 个表。", dbName, totalInsertedRows, totalTablesProcessed);
             }
         } else {
-            log.info("===>传入数据为空，无任何操作。");
+            log.info("===>{}传入数据为空，无任何操作。", dbName);
         }
     }
 
@@ -64,18 +68,19 @@ public class TdengineWritter {
                 sqlBuilder.append("`").append(columnName).append("`");
                 isFirstColumn = false;
             }
-            if (dbName.contains("event") && tableName.contains("_")) {
-                String[] parts = tableName.split("_");
-                sqlBuilder.append(") USING `event_1234567890_")
-                        .append(parts[1]).append("` TAGS (")
-                        .append(parts[0]).append(") VALUES ");
-            } else if (dbName.contains("property") && !tableName.contains("_")) {
-                sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
-                        .append(tableName)
-                        .append(") VALUES ");
-            } else {
-                sqlBuilder.append(") VALUES ");
-            }
+//            if (dbName.contains("event") && tableName.contains("_")) {
+//                String[] parts = tableName.split("_");
+//                sqlBuilder.append(") USING `event_1234567890_")
+//                        .append(parts[1]).append("` TAGS (")
+//                        .append(parts[0]).append(") VALUES ");
+//            } else if (dbName.contains("property") && !tableName.contains("_")) {
+//                sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
+//                        .append(tableName)
+//                        .append(") VALUES ");
+//            } else {
+//                sqlBuilder.append(") VALUES ");
+//            }
+            sqlBuilder.append(") VALUES ");
         }
         int byteSizeEstimate = 0;
         for (DynamicDataRow dataRow : dataRows) {
@@ -96,18 +101,19 @@ public class TdengineWritter {
                     sqlBuilder.append("`").append(columnName).append("`");
                     isFirstColumn = false;
                 }
-                if (dbName.contains("event") && tableName.contains("_")) {
-                    String[] parts = tableName.split("_");
-                    sqlBuilder.append(") USING `event_1234567890_")
-                            .append(parts[1]).append("` TAGS (")
-                            .append(parts[0]).append(") VALUES ");
-                } else if (dbName.contains("property") && !tableName.contains("_")) {
-                    sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
-                            .append(tableName)
-                            .append(") VALUES ");
-                } else {
-                    sqlBuilder.append(") VALUES ");
-                }
+//                if (dbName.contains("event") && tableName.contains("_")) {
+//                    String[] parts = tableName.split("_");
+//                    sqlBuilder.append(") USING `event_1234567890_")
+//                            .append(parts[1]).append("` TAGS (")
+//                            .append(parts[0]).append(") VALUES ");
+//                } else if (dbName.contains("property") && !tableName.contains("_")) {
+//                    sqlBuilder.append(") USING `property_1234567890_1234567891` TAGS (")
+//                            .append(tableName)
+//                            .append(") VALUES ");
+//                } else {
+//                    sqlBuilder.append(") VALUES ");
+//                }
+                sqlBuilder.append(") VALUES ");
                 byteSizeEstimate = 0;
             }
             sqlBuilder.append("(");

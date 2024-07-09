@@ -101,8 +101,8 @@ public class WebSocketController {
     public ResponseEntity<String> startWebSocketSession(@RequestBody QueryDataRequest queryDataRequest) {
         try {
             myWebSocketClient.closeConnection();
-//            String url = "ws://huayi.ys7.com/source/websocket";
-            String url = "ws://localhost:48001/websocket";
+            String url = "ws://huayi.ys7.com/source/websocket";
+//            String url = "ws://localhost:48001/websocket";
 //            webSocketDataReceiver.connect(url, queryDataRequest);
             StompSessionHandler handler = new MyStompSessionHandler(queryDataRequest);
             myWebSocketClient.initConnection(url, handler);
@@ -114,29 +114,29 @@ public class WebSocketController {
 
     @Scheduled(cron = "*/30 * * * * ?")
     public void mySheduledTask1() {
-        log.info("定时任务执行property同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("property_1234567890");
         LocalDateTime endTime = LocalDateTime.now();
-        LocalDateTime startTime = endTime.minusSeconds(35);
+        LocalDateTime startTime = endTime.minusMinutes(5);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         queryDataRequest.setStartTime(startTime.format(formatter));
         queryDataRequest.setEndTime(endTime.format(formatter));
+        log.info("定时任务执行property同步，开始时间：{}，结束时间{}", queryDataRequest.getStartTime(), queryDataRequest.getEndTime());
         qidong(queryDataRequest);
     }
 
 
     @Scheduled(cron = "*/30 * * * * ?")
     public void myScheduledTask2() {
-        log.info("定时任务执行event同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("event_1234567890");
         // 计算35秒前的时间
         LocalDateTime endTime = LocalDateTime.now();
-        LocalDateTime startTime = endTime.minusSeconds(35);
+        LocalDateTime startTime = endTime.minusMinutes(5);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         queryDataRequest.setStartTime(startTime.format(formatter));
         queryDataRequest.setEndTime(endTime.format(formatter));
+        log.info("定时任务执行event同步，开始时间：{}，结束时间{}", queryDataRequest.getStartTime(), queryDataRequest.getEndTime());
         qidong(queryDataRequest);
     }
 
@@ -170,7 +170,7 @@ public class WebSocketController {
         );
         queryDataRequest.setTableList(tableNames);
         LocalDateTime endTime = LocalDateTime.now();
-        LocalDateTime startTime = endTime.minusSeconds(35);
+        LocalDateTime startTime = endTime.minusMinutes(5);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         queryDataRequest.setStartTime(startTime.format(formatter));
         queryDataRequest.setEndTime(endTime.format(formatter));

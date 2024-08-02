@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -112,7 +111,7 @@ public class WebSocketController {
         }
     }
 
-    @Scheduled(cron = "*/30 * * * * ?")
+//    @Scheduled(cron = "*/30 * * * * ?")
     public void mySheduledTask1() {
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("property_1234567890");
@@ -126,7 +125,7 @@ public class WebSocketController {
     }
 
 
-    @Scheduled(cron = "*/30 * * * * ?")
+//    @Scheduled(cron = "*/30 * * * * ?")
     public void myScheduledTask2() {
         QueryDataRequest queryDataRequest = new QueryDataRequest();
         queryDataRequest.setUrl("event_1234567890");
@@ -141,7 +140,7 @@ public class WebSocketController {
     }
 
 
-    @Scheduled(cron = "*/30 * * * * ?")
+//    @Scheduled(cron = "*/30 * * * * ?")
     public void myScheduledTask() {
         log.info("定时任务执行huayi-iot-cloud同步");
         QueryDataRequest queryDataRequest = new QueryDataRequest();

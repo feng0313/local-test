@@ -98,7 +98,7 @@ public class HttpClientUtil {
 
     public void test(QueryDataRequest request) {
         try {
-            URL url = new URL("http://huayi.ys7.com/source/get"); // 替换为实际服务地址
+            URL url = new URL("http://218.75.111.22/source/get"); // 替换为实际服务地址
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json; utf-8");

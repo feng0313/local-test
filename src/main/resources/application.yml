@@ -24,3 +24,7 @@ mybatis-plus:
       logic-not-delete-value: 0
   configuration:
     map-underscore-to-camel-case: true # 下划线转驼峰等其他配置
+
+backend:
+  scheduled:
+    enable: false

@@ -3,9 +3,9 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       driverClassName: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.210.254.39:3306/huayi-iot-cloud?useUnicode=true&characterEncoding=utf-8&useSSL=false
+      url: jdbc:mysql://lb.internal:5306/huayi-health-cloud?useUnicode=true&characterEncoding=utf-8&useSSL=false
       username: root
-      password: 'Turing12345!'
+      password: Huayi2021
       # 连接池配置
       initial-size: 5 # 初始化连接池时创建的连接数量
       min-idle: 5 # 最小空闲连接数
@@ -21,35 +21,15 @@ spring:
       test-while-idle: true
       test-on-borrow: false
       test-on-return: false
-
-  websocket:
-    stomp:
-      message-size: 1048576
-  websockets:
-    sockjs:
-      client:
-        # SockJS心跳发送间隔时间（毫秒）
-        heartbeatInterval: 5000
-        # SockJS连接超时时间（毫秒）
-        connectTimeout: 5000
-      server:
-        # SockJS心跳接收超时时间（毫秒），此配置项可能需要在实际环境中确认支持情况
-        # Spring WebFlux中的Netty服务器可能不直接支持此配置，需查阅具体文档
-        heartbeatTimeOut: 5000
-    stomp:
-      # 消息大小限制，默认为64K，这里设置为1MB
-      message-size: 1048576
-    # WebSocket会话超时时间（毫秒）
-    session-timeout: 86400000
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    database: 0
+    timeout: 10000ms
 
 server:
   tomcat:
     max-swallow-size: -1 # 设置吞吐量大小限制
 
-#  redis:
-#    host: localhost
-#    port: 6379
-#    password:
-#    database: 0
-#    timeout: 10000ms
 debug: false

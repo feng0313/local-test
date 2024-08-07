@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author 13994
  */
@@ -65,22 +68,30 @@ public class WeiXinHelper {
      * @return
      */
     @SneakyThrows
-    public OpenIdResult getUserList(String token) {
-        String result = HttpClientUtil.sendHttpGetRequest(GET_USER_LIST_URL + token + "&next_openid=");
-        if (StringUtils.isNotBlank(JSONObject.parseObject(result).getString("data"))) {
-            OpenIdResult openIdResult = JSONObject.parseObject(result, new TypeReference<OpenIdResult>() {
-            });
-            String lastOpenId = openIdResult.getData().getOpenid().get(openIdResult.getData().getOpenid().size() - 1);
-            log.info("获取关注用户列表成功");
-            log.info("关注用户总数：{}，本次传入用户数：{}，最后一个关注用户的openId:{}",
-                    openIdResult.getTotal(),
-                    openIdResult.getCount(),
-                    lastOpenId);
-            return openIdResult;
-        } else {
-            log.error("获取关注用户列表失败===>{}", result);
-            return null;
+    public List<String> getUserList(String token) {
+        List<String> allOpenIds = new ArrayList<>();
+        String nextOpenId = "";
+        while (true) {
+            String response = HttpClientUtil.sendHttpGetRequest(GET_USER_LIST_URL + token + "&next_openid=" + nextOpenId);
+            if (StringUtils.isNotBlank(JSONObject.parseObject(response).getString("data"))) {
+                OpenIdResult currentResult = JSONObject.parseObject(response, new TypeReference<OpenIdResult>() {
+                });
+                allOpenIds.addAll(currentResult.getData().getOpenid());
+                nextOpenId = currentResult.getNext_openid();
+                log.info("获取关注用户列表成功");
+                log.info("关注用户总数：{}，本次传入用户数：{}，最后一个关注用户的openId:{}",
+                        currentResult.getTotal(),
+                        currentResult.getCount(),
+                        nextOpenId);
+                if ( currentResult.getCount() < 10000) {
+                    break;
+                }
+            } else {
+                log.error("获取关注用户列表失败===>{}", response);
+                return null;
+            }
         }
+        return allOpenIds;
     }
 
     /**

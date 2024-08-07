@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.chunfeng.local.common.Result;
 import com.chunfeng.local.mapper.weixin.AppUserWxmpMapper;
 import com.chunfeng.local.model.weixin.AppUserWxmp;
-import com.chunfeng.local.model.weixin.OpenIdResult;
 import com.chunfeng.local.model.weixin.WechatUser;
 import com.chunfeng.local.model.weixin.WeiXinUserList;
 import com.chunfeng.local.service.WeiXinService;
@@ -43,13 +42,15 @@ public class WeiXinServiceImpl implements WeiXinService {
     public Result<String> updateUserInfo() {
         log.info("获取公众号关注用户信息===>开始");
         String token = weiXinHelper.getAccessToken();
-        OpenIdResult openIdResult = weiXinHelper.getUserList(token);
-        if (openIdResult == null) {
+        List<String> openidList = weiXinHelper.getUserList(token);
+        if (openidList == null) {
             return Result.error("获取失败");
         }
-        List<String> openidList = openIdResult.getData().getOpenid();
         List<AppUserWxmp> appUserWxmpList = appUserWxmpMapper.selectList(new LambdaQueryWrapper<AppUserWxmp>()
                 .orderByDesc(AppUserWxmp::getCreateTime));
+        List<String> unionIdList = appUserWxmpList.stream()
+                .map(AppUserWxmp::getUnionId)
+                .collect(Collectors.toList());
         int i = 0;
         for (int start = 0; start < openidList.size(); start += 100) {
             int end = Math.min(start + 100, openidList.size());
@@ -66,9 +67,6 @@ public class WeiXinServiceImpl implements WeiXinService {
             weiXinUserList.setUser_list(user_list);
             JSONArray jsonArray = weiXinHelper.getWeiXinUserInfo(weiXinUserList, token);
             if (Objects.nonNull(jsonArray)) {
-                List<String> unionIdList = appUserWxmpList.stream()
-                        .map(AppUserWxmp::getUnionId)
-                        .collect(Collectors.toList());
                 for (Object o : jsonArray) {
                     WechatUser wechatUser = JSONObject.parseObject(o.toString(), new TypeReference<WechatUser>() {
                     });
@@ -91,12 +89,6 @@ public class WeiXinServiceImpl implements WeiXinService {
                             int insert = appUserWxmpMapper.insert(appUserWxmp);
                             i += insert;
                         }
-//                        } else {
-//                            appUserWxmp.setUpdateTime(LocalDateTime.now());
-//                            int update = appUserWxmpMapper.update(appUserWxmp, new LambdaQueryWrapper<AppUserWxmp>()
-//                                    .eq(AppUserWxmp::getUnionId, appUserWxmp.getUnionId()));
-//                            u += update;
-//                        }
                     }
                 }
             }

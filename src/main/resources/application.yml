@@ -27,4 +27,4 @@ mybatis-plus:
 
 backend:
   scheduled:
-    enable: false
+    enable: true

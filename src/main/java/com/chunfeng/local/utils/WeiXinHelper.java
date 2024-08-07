@@ -41,6 +41,7 @@ public class WeiXinHelper {
 
     /**
      * 获取微信公众号请求token
+     *
      * @return
      */
     @SneakyThrows
@@ -59,21 +60,22 @@ public class WeiXinHelper {
     /**
      * 以token获取关注用户列表
      * 每次最大一万条
+     *
      * @param token
-     * @param openId
      * @return
      */
     @SneakyThrows
-    public OpenIdResult getUserList(String token, String openId) {
-        String result = HttpClientUtil.sendHttpGetRequest(GET_USER_LIST_URL + token + "&next_openid=" + openId);
-        if (StringUtils.isNotBlank(JSONObject.parseObject(result).getString("openid"))) {
+    public OpenIdResult getUserList(String token) {
+        String result = HttpClientUtil.sendHttpGetRequest(GET_USER_LIST_URL + token + "&next_openid=");
+        if (StringUtils.isNotBlank(JSONObject.parseObject(result).getString("data"))) {
             OpenIdResult openIdResult = JSONObject.parseObject(result, new TypeReference<OpenIdResult>() {
             });
+            String lastOpenId = openIdResult.getData().getOpenid().get(openIdResult.getData().getOpenid().size() - 1);
             log.info("获取关注用户列表成功");
             log.info("关注用户总数：{}，本次传入用户数：{}，最后一个关注用户的openId:{}",
                     openIdResult.getTotal(),
                     openIdResult.getCount(),
-                    openIdResult.getData().getOpenid().get(openIdResult.getData().getOpenid().size() - 1));
+                    lastOpenId);
             return openIdResult;
         } else {
             log.error("获取关注用户列表失败===>{}", result);
@@ -83,6 +85,7 @@ public class WeiXinHelper {
 
     /**
      * 以openid获取用户信息
+     *
      * @param weiXinUserList
      * @param token
      * @return

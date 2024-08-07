@@ -13,5 +13,9 @@ ENV JAVA_OPTS="-Xms512m -Xmx1024m -Djava.security.egd=file:/dev/./urandom"
 # 声明应用需要监听的端口
 EXPOSE 48001
 
+# 设置 JVM 时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # 设置容器启动时需要执行的命令
 ENTRYPOINT ["java", "-jar", "localTests.jar", "${JAVA_OPTS}"]

@@ -40,15 +40,17 @@ public class WeiXinServiceImpl implements WeiXinService {
     private AppUserWxmpMapper appUserWxmpMapper;
 
     @Override
-    public Result<String> updateUserInfo(String nextOpenId) {
+    public Result<String> updateUserInfo() {
+        log.info("获取公众号关注用户信息===>开始");
         String token = weiXinHelper.getAccessToken();
-        OpenIdResult openIdResult = weiXinHelper.getUserList(token, nextOpenId);
+        OpenIdResult openIdResult = weiXinHelper.getUserList(token);
         if (openIdResult == null) {
             return Result.error("获取失败");
         }
         List<String> openidList = openIdResult.getData().getOpenid();
         List<AppUserWxmp> appUserWxmpList = appUserWxmpMapper.selectList(new LambdaQueryWrapper<AppUserWxmp>()
                 .orderByDesc(AppUserWxmp::getCreateTime));
+        int i = 0;
         for (int start = 0; start < openidList.size(); start += 100) {
             int end = Math.min(start + 100, openidList.size());
             List<String> currentBatch = openidList.subList(start, end);
@@ -86,17 +88,22 @@ public class WeiXinServiceImpl implements WeiXinService {
                         if (!unionIdList.contains(wechatUser.getUnionid())) {
                             appUserWxmp.setCreateTime(LocalDateTime.now());
                             appUserWxmp.setUpdateTime(appUserWxmp.getCreateTime());
-                            appUserWxmpMapper.insert(appUserWxmp);
-                        } else {
-                            appUserWxmp.setUpdateTime(LocalDateTime.now());
-                            appUserWxmpMapper.update(appUserWxmp, new LambdaQueryWrapper<AppUserWxmp>()
-                                    .eq(AppUserWxmp::getUnionId, appUserWxmp.getUnionId()));
+                            int insert = appUserWxmpMapper.insert(appUserWxmp);
+                            i += insert;
                         }
+//                        } else {
+//                            appUserWxmp.setUpdateTime(LocalDateTime.now());
+//                            int update = appUserWxmpMapper.update(appUserWxmp, new LambdaQueryWrapper<AppUserWxmp>()
+//                                    .eq(AppUserWxmp::getUnionId, appUserWxmp.getUnionId()));
+//                            u += update;
+//                        }
                     }
                 }
             }
         }
-        return Result.success();
+        log.info("获取公众号关注用户信息成功===>新增{}条", i);
+        log.info("获取公众号关注用户信息===>结束");
+        return Result.success("更新成功");
     }
 
     @Scheduled(fixedRate = 7190000)
@@ -104,9 +111,6 @@ public class WeiXinServiceImpl implements WeiXinService {
         if (!enable) {
             return;
         }
-        AppUserWxmp appUserWxmp = appUserWxmpMapper.selectOne(new LambdaQueryWrapper<AppUserWxmp>()
-                .orderByDesc(AppUserWxmp::getCreateTime)
-                .last("LIMIT 1"));
-        this.updateUserInfo(appUserWxmp.getOpenId());
+        this.updateUserInfo();
     }
 }

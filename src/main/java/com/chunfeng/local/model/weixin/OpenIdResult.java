@@ -12,11 +12,11 @@ import java.util.List;
 @Data
 public class OpenIdResult {
     /**拉取的OPENID个数，最大值为10000*/
-    private String count;
+    private int count;
     /**列表数据，OPENID的列表*/
     private OpenIdList data;
     /**关注该公众账号的总用户数*/
-    private String total;
+    private int total;
     /**拉取列表的最后一个用户的OPENID*/
     private String next_openid;
 

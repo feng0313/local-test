@@ -98,7 +98,7 @@ public class WeiXinServiceImpl implements WeiXinService {
         return Result.success("更新成功");
     }
 
-    @Scheduled(fixedRate = 7190000)
+    @Scheduled(fixedRate = 3600000)
     private void enable() {
         if (!enable) {
             return;

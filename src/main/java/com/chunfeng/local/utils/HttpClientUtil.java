@@ -5,20 +5,17 @@ import com.chunfeng.local.mapper.TdengineWritter;
 import com.chunfeng.local.model.DynamicDataRow;
 import com.chunfeng.local.model.QueryDataRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import org.apache.commons.io.IOUtils;
 
 /**
  * 接口定义HTTP请求
@@ -146,6 +143,87 @@ public class HttpClientUtil {
             connection.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        String imageUrl = "http://localhost:5003/api/nokia";
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("请输入文本:");
+            String inputText = scanner.nextLine();
+            if ("exit".equalsIgnoreCase(inputText)) {
+                break;
+            }
+            String requestJson = "{\"text\":\"" + inputText + "\"}";
+            try {
+                downloadAndSaveImageFromAPI(imageUrl, requestJson);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        scanner.close();
+    }
+
+    /**
+     * 从 API 下载图片并保存到桌面
+     * @param imageUrl 图片的 URL
+     * @param requestJson 请求参数
+     * @throws IOException 如果发生 I/O 异常
+     */
+    public static void downloadAndSaveImageFromAPI(String imageUrl, String requestJson) throws IOException {
+        Path desktopPath = Paths.get(System.getProperty("user.home"), "Desktop");
+        File desktopDir = desktopPath.toFile();
+        if (!desktopDir.exists()) {
+            desktopDir.mkdirs();
+        }
+        File outputFile = new File(desktopDir, System.currentTimeMillis()+"_image.png");
+        URL url = new URL(imageUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "application/json; utf-8");
+        connection.setRequestProperty("Accept", "application/json");
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(requestJson.getBytes());
+            os.flush();
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (InputStream is = connection.getInputStream()) {
+                    String response = IOUtils.toString(is, StandardCharsets.UTF_8);
+                    byte[] imageData = decodeBase64(response);
+                    try (OutputStream out = Files.newOutputStream(outputFile.toPath())) {
+                        out.write(imageData);
+                    }
+                    validateImageFile(outputFile);
+                }
+            } else {
+                System.err.println("HTTP Error: " + responseCode);
+            }
+        }
+    }
+
+    /**
+     * 解码 base64 字符串为字节数组
+     * @param base64String base64 编码的字符串
+     * @return 解码后的字节数组
+     */
+    private static byte[] decodeBase64(String base64String) {
+        return java.util.Base64.getDecoder().decode(base64String);
+    }
+
+    /**
+     * 验证图片文件是否可以打开
+     * @param file 图片文件
+     * @throws IOException 如果发生 I/O 异常
+     */
+    private static void validateImageFile(File file) throws IOException {
+        try {
+            javax.imageio.ImageIO.read(file);
+            System.out.println("图片文件已成功保存并验证有效！");
+        } catch (IOException e) {
+            System.err.println("图片文件无效，请检查数据是否正确：" + file.getAbsolutePath());
+            throw e;
         }
     }
 }
